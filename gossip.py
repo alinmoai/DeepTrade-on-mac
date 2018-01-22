@@ -116,6 +116,25 @@ def make_model(input_shape, nb_epochs=100, batch_size=128, lr=0.01, n_layers=1, 
                 fp.write(str(val) + "\t")
             fp.write('\n')
 
+import keras.backend as K
+from keras.utils.generic_utils import get_custom_objects
+from keras.layers import Activation
+
+# register custom function
+class Relu_Limited(Activation):
+    def __init__(self, activation, **kwargs):
+        super(Relu_Limited, self).__init__(activation, **kwargs)
+        self.__name__ = 'Relu_Limited'
+
+def risk_estimation(y_true, y_pred):
+        return -100. * K.mean((y_true - 0.0002) * y_pred)
+
+def relu_limited(x, alpha=0., max_value=1.):
+    return K.relu(x, alpha=alpha, max_value=max_value)
+
+get_custom_objects().update({'relu_limited': Relu_Limited(relu_limited)})
+get_custom_objects().update({'risk_estimation': risk_estimation})
+
 if __name__ == '__main__':
     operation = "train"
     if len(sys.argv) > 1:
